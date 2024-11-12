@@ -1,0 +1,12 @@
+{
+    "Name": "csv_crawler",
+    "Role": "AWSGlueServiceRole-workshop-cli",
+    "DatabaseName": "workshop_db",
+    "Targets": {
+      "S3Targets": [
+        {
+          "Path": "s3://sae-airbnb-data-workshop/csv_data/"
+        }
+      ]
+    }
+  }

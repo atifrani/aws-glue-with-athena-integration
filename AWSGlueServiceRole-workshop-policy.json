@@ -1,0 +1,30 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:PutObjectAcl"
+            ],
+            "Resource": [
+                "arn:aws:s3:::sae-airbnb-data-workshop/csv_data/*",
+                "arn:aws:s3:::sae-airbnb-data-workshop/glue_transformed_data/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::sae-airbnb-data-workshop",
+            "Condition": {
+                "StringLike": {
+                    "s3:prefix": [
+                        "csv_data/*",
+                        "glue_transformed_data/*"
+                    ]
+                }
+            }
+        }
+    ]
+  }

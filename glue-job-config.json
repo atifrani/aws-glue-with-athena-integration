@@ -1,0 +1,8 @@
+{
+    "Name": "ETL-glue-csv-job",
+    "Role": "AWSGlueServiceRole-workshop",
+    "Command": {
+      "Name": "glueetl",
+      "ScriptLocation": "s3://sae-airbnb-data-workshop/pyspark-script/spark-job.py"
+    }
+}
