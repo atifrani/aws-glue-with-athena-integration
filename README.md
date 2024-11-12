@@ -18,13 +18,13 @@ Ce workshop vise à démontrer comment intégrer Amazon Athena avec AWS Glue en 
 ### Étape 1 : Hébergement des fichiers sur Amazon S3
 1. Créer un bucket S3 via la console ou le CLI :
 ```bash
-aws s3api create-bucket --bucket airbnb-data-workshop --region eu-west-1
+aws s3api create-bucket --bucket sae-airbnb-data-workshop --region eu-west-3
 ```
 
 2. Charger les fichiers CSV et JSON via la console ou le CLI:
 ```bash
-aws s3 cp ./csv/ s3://airbnb-data-workshop/csv_data/ --recursive
-aws s3 cp ./json/ s3://airbnb-data-workshop/json_data/ --recursive
+aws s3 cp ./csv/ s3://sae-airbnb-data-workshop/csv_data/ --recursive
+aws s3 cp ./json/ s3://sae-airbnb-data-workshop/json_data/ --recursive
 ```
 
 ### Étape 2 : Configuration des Crawlers AWS Glue
@@ -59,11 +59,11 @@ aws glue create-database --cli-input-json file://database-input.json
 ```
 
 ```bash
-aws iam create-role --role-name AWSGlueServiceRole-kris-workshop --assume-role-policy-document file://glue-trust-policy.json
+aws iam create-role --role-name AWSGlueServiceRole-workshop --assume-role-policy-document file://glue-trust-policy.json
 ```
 
 4. Creer une politique via mon fichier json et l'attacher au role AWSGlueServiceRole-kris-workshop:
-AWSGlueServiceRole-kris-workshop-policy.json
+AWSGlueServiceRole-workshop-policy.json
 ```json
 {
   "Version": "2012-10-17",
@@ -76,14 +76,14 @@ AWSGlueServiceRole-kris-workshop-policy.json
               "s3:PutObjectAcl"
           ],
           "Resource": [
-              "arn:aws:s3:::airbnb-data-workshop/csv_data/*",
-              "arn:aws:s3:::airbnb-data-workshop/glue_transformed_data/*"
+              "arn:aws:s3:::sae-airbnb-data-workshop/csv_data/*",
+              "arn:aws:s3:::sae-airbnb-data-workshop/glue_transformed_data/*"
           ]
       },
       {
           "Effect": "Allow",
           "Action": "s3:ListBucket",
-          "Resource": "arn:aws:s3:::airbnb-data-workshop",
+          "Resource": "arn:aws:s3:::sae-airbnb-data-workshop",
           "Condition": {
               "StringLike": {
                   "s3:prefix": [
@@ -99,8 +99,8 @@ AWSGlueServiceRole-kris-workshop-policy.json
 
 ```bash
 $policyArn = (aws iam create-policy `
-    --policy-name AWSGlueServiceRole-kris-workshop-policy `
-    --policy-document file://AWSGlueServiceRole-kris-workshop-policy.json |
+    --policy-name AWSGlueServiceRole-workshop-policy `
+    --policy-document file://AWSGlueServiceRole-workshop-policy.json |
     ConvertFrom-Json).Policy.Arn
 ```
 
@@ -120,12 +120,12 @@ aws iam attach-role-policy `
 ```json
 {
   "Name": "csv_crawler",
-  "Role": "AWSGlueServiceRole-kris-workshop",
+  "Role": "AWSGlueServiceRole-workshop",
   "DatabaseName": "workshop_db",
   "Targets": {
     "S3Targets": [
       {
-        "Path": "s3://airbnb-data-workshop/csv_data/"
+        "Path": "s3://sae-airbnb-data-workshop/csv_data/"
       }
     ]
   }
@@ -140,12 +140,12 @@ aws glue create-crawler --cli-input-json file://csv-crawler-config.json
 ```json
 {
   "Name": "json_crawler",
-  "Role": "AWSGlueServiceRole-kris-workshop",
+  "Role": "AWSGlueServiceRole-workshop",
   "DatabaseName": "workshop_db",
   "Targets": {
     "S3Targets": [
       {
-        "Path": "s3://airbnb-data-workshop/json_data/"
+        "Path": "s3://sae-airbnb-data-workshop/json_data/"
       }
     ]
   }
@@ -187,7 +187,7 @@ data_source = glueContext.create_dynamic_frame.from_options(
     format_options={"quoteChar": "\"", "withHeader": True, "separator": ","},
     connection_type="s3",
     format="csv",
-    connection_options={"paths": ["s3://airbnb-data-workshop/csv_data/raw_listings.csv"], "recurse": True},
+    connection_options={"paths": ["s3://sae-airbnb-data-workshop/csv_data/raw_listings.csv"], "recurse": True},
     transformation_ctx="data_source"
 )
 
@@ -228,7 +228,7 @@ transformed_dynamic_frame = DynamicFrame.fromDF(transformed_df, glueContext, "tr
 
 # Write the transformed DynamicFrame to S3
 data_target = glueContext.getSink(
-    path="s3://airbnb-data-workshop/glue_transformed_data/",
+    path="s3://sae-airbnb-data-workshop/glue_transformed_data/",
     connection_type="s3",
     updateBehavior="UPDATE_IN_DATABASE",
     partitionKeys=[],
@@ -245,7 +245,7 @@ job.commit()
 
 2. Copiez votre job py-Spark sur S3:
 ```bash
-aws s3 cp spark-job.py s3://airbnb-data-workshop/pyspark-script/spark-job.py
+aws s3 cp spark-job.py s3://sae-airbnb-data-workshop/pyspark-script/spark-job.py
 ```
 
 3. Créer le job Glue, en utilisant glue-job-config.json :
@@ -255,7 +255,7 @@ aws s3 cp spark-job.py s3://airbnb-data-workshop/pyspark-script/spark-job.py
   "Role": "AWSGlueServiceRole-kris-workshop",
   "Command": {
     "Name": "glueetl",
-    "ScriptLocation": "s3://airbnb-data-workshop/pyspark-script/spark-job.py"
+    "ScriptLocation": "s3://sae-airbnb-data-workshop/pyspark-script/spark-job.py"
   }
 }
 ```
@@ -289,7 +289,7 @@ zip -r my_glue_job.zip .
 f. Charger le package ZIP sur S3 :
 Utiliser AWS CLI pour télécharger le fichier ZIP vers S3 : Assurez-vous que vous avez AWS CLI configuré avec les permissions appropriées, puis exécutez :
 ```bash
-aws s3 cp my_glue_job.zip s3://airbnb-data-workshop/pyspark-script/my_glue_job.zip
+aws s3 cp my_glue_job.zip s3://sae-airbnb-data-workshop/pyspark-script/my_glue_job.zip
 ```
 
 5. Exécuter le job Glue
@@ -319,7 +319,7 @@ $queryString = Get-Content -Path "./query.sql" -Raw
 aws athena start-query-execution `
     --query-string "$queryString" `
     --query-execution-context Database=workshop_db `
-    --result-configuration OutputLocation="s3://airbnb-data-workshop/athena_results/"
+    --result-configuration OutputLocation="s3://sae-airbnb-data-workshop/athena_results/"
 ```
 Après exécution, Athena renvoie un QueryExecutionId à noter pour récupérer les résultats.
 
